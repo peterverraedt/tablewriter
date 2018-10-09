@@ -79,6 +79,8 @@ type Table struct {
 	columnsParams  []string
 	footerParams   []string
 	columnsAlign   []int
+	columnsFill    []bool
+	minTableWidth  int
 }
 
 // Start New Table
@@ -114,12 +116,16 @@ func NewWriter(writer io.Writer) *Table {
 		headerParams:  []string{},
 		columnsParams: []string{},
 		footerParams:  []string{},
-		columnsAlign:  []int{}}
+		columnsAlign:  []int{},
+		columnsFill:   []bool{},
+		minTableWidth: 0}
 	return t
 }
 
 // Render table output
 func (t *Table) Render() {
+	t.fillTable()
+
 	if t.borders.Top {
 		t.printLine(true)
 	}
@@ -195,6 +201,11 @@ func (t *Table) SetColMinWidth(column int, width int) {
 	t.cs[column] = width
 }
 
+// Set the minimal width for the table
+func (t *Table) SetTableMinWidth(width int) {
+	t.minTableWidth = width
+}
+
 // Set the Column Separator
 func (t *Table) SetColumnSeparator(sep string) {
 	t.pColumn = sep
@@ -238,6 +249,12 @@ func (t *Table) SetColumnAlignment(keys []int) {
 			v = ALIGN_DEFAULT
 		}
 		t.columnsAlign = append(t.columnsAlign, v)
+	}
+}
+
+func (t *Table) SetColumnFill(keys []bool) {
+	for _, v := range keys {
+		t.columnsFill = append(t.columnsFill, v)
 	}
 }
 
@@ -588,6 +605,15 @@ func (t *Table) fillAlignment(num int) {
 	}
 }
 
+func (t *Table) fillColumnsFill(num int) {
+	if len(t.columnsFill) < num {
+		t.columnsFill = make([]bool, num)
+		for i := range t.columnsFill {
+			t.columnsFill[i] = true
+		}
+	}
+}
+
 // Print Row Information
 // Adjust column alignment based on type
 
@@ -836,4 +862,29 @@ func (t *Table) parseDimension(str string, colKey, rowKey int) []string {
 	}
 	//fmt.Printf("Raw %+v %d\n", raw, len(raw))
 	return raw
+}
+
+func (t *Table) fillTable() {
+	cols := len(t.cs)
+	t.fillColumnsFill(cols)
+
+	canFill := false
+	for i:= 0; i < cols; i++ {
+		if t.columnsFill[i] {
+			canFill = true
+		}
+	}
+
+	if canFill {
+		fill := t.minTableWidth - t.getTableWidth()
+
+		for fill > 0 {
+			for i, _ := range t.cs {
+				if t.columnsFill[i] && fill > 0 {
+					t.cs[i]++
+					fill--
+				}
+			}
+		}
+	}
 }

@@ -26,6 +26,7 @@ Generate ASCII table on the fly ...  Installation is simple as
 - Optional identical cells merging
 - Set custom caption
 - Optional reflowing of paragrpahs in multi-line cells.
+- Supports specifying minimum table width.
 
 #### Example   1 - Basic
 ```go
@@ -265,6 +266,38 @@ Note: Caption text will wrap with total width of rendered table.
 |  D   |      The Gopher       |    800 |
 +------+-----------------------+--------+
 Movie ratings.
+```
+
+#### Example 7 - Minimum table with
+```go
+data := [][]string{
+    []string{"A", "The Good", "500"},
+    []string{"B", "The Very very Bad Man", "288"},
+    []string{"C", "The Ugly", "120"},
+    []string{"D", "The Gopher", "800"},
+}
+
+table := tablewriter.NewWriter(os.Stdout)
+table.SetHeader([]string{"Name", "Sign", "Rating"})
+table.SetTableMinWidth(50)
+table.SetColumnFill([]bool{false, true, true})
+
+for _, v := range data {
+    table.Append(v)
+}
+table.Render() // Send output
+```
+
+##### Output 7
+```
++------+---------------------------+------------+
+| NAME |           SIGN            |     RATING |
++------+---------------------------+------------+
+|  A   |         The Good          |        500 |
+|  B   |   The Very very Bad Man   |        288 |
+|  C   |         The Ugly          |        120 |
+|  D   |        The Gopher         |        800 |
++------+---------------------------+------------+
 ```
 
 #### TODO
